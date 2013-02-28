@@ -418,6 +418,16 @@ parse_git_status() {
         #git_dir=` git rev-parse --git-dir 2> /dev/null`
 
         [[  -n ${git_dir/./} ]]   ||   return  1
+        
+        base_dir=$(git rev-parse --show-cdup 2>/dev/null) || return 1
+        if [ -n "$base_dir" ]; then
+          base_dir=`cd $base_dir; pwd`
+        else
+          base_dir=$PWD
+        fi
+        sub_dir=$(git rev-parse --show-prefix)
+        sub_dir="/${sub_dir%/}"
+        base_dir="$(basename "${base_dir}")"
 
         vcs=git
 
@@ -425,8 +435,8 @@ parse_git_status() {
 	added_files=()
 	modified_files=()
 	untracked_files=()
-        [[ $rawhex_len -gt 0 ]]  && freshness="$dim="
-
+        # [[ $rawhex_len -gt 0 ]]  && freshness="$dim="
+        [[ $rawhex_len -gt 0 ]]  && freshness="$colors_reset"
         unset branch status modified added clean init added mixed untracked op detached
 
 	# info not in porcelain status
@@ -531,6 +541,7 @@ parse_git_status() {
 
         if [[ $init ]];  then
                 vcs_info=${white}init
+                # vcs_info=git:${white}init
 
         else
                 if [[ "$detached" ]] ;  then
@@ -545,6 +556,7 @@ parse_git_status() {
                         #branch="<$branch>"
                 fi
                 vcs_info="$branch$freshness$rawhex"
+                # vcs_info="git:$branch$freshness$rawhex"
 
         fi
  }
@@ -624,10 +636,11 @@ parse_vcs_status() {
         fi
 
 
-        head_local="$vcs_color(${vcs_info}$vcs_color${file_list}$vcs_color)"
+        # head_local="$vcs_color(${vcs_info}$vcs_color${file_list}$vcs_color)"
+        head_local="$vcs_color[${vcs_info}$vcs_color${file_list}$vcs_color]"
 
         ### fringes
-        head_local="${head_local+$vcs_color$head_local }"
+        head_local="${head_local+$vcs_color$head_local}"
         #above_local="${head_local+$vcs_color$head_local\n}"
         #tail_local="${tail_local+$vcs_color $tail_local}${dir_color}"
  }
@@ -705,7 +718,13 @@ prompt_command_function() {
         # else eval cwd_cmd,  cwd should have path after exection
         eval "${cwd_cmd/\\/cwd=\\\\}"
 
-        PS1="$colors_reset$rc$head_local$color_who_where$dir_color$cwd$tail_local$dir_color$prompt_char $colors_reset"
+        # PS1="$colors_reset$rc$head_local$color_who_where$dir_color$cwd$tail_local$dir_color$prompt_char $colors_reset"
+        if [ -n "$vcs" ]; then
+                # PS1="$colors_reset\n$yellow\t$colors_reset $color_who_where$rc$dir_color$cwd$tail_local$head_local$colors_reset$prompt_char "
+                PS1="$colors_reset\n$yellow\t$colors_reset $color_who_where$rc$dir_color$base_dir$tail_local$head_local$colors_reset$sub_dir $prompt_char "
+        else
+                PS1="\n$yellow\t$colors_reset \u@\h ${PWD/$HOME/~} \$ "
+        fi
 
         unset head_local tail_local pwd
  }
