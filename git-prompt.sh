@@ -432,11 +432,11 @@ parse_git_status() {
         vcs=git
 
         ##########################################################   GIT STATUS
-	added_files=()
-	modified_files=()
-	untracked_files=()
+        added_files=()
+        modified_files=()
+        untracked_files=()
         # [[ $rawhex_len -gt 0 ]]  && freshness="$dim="
-        [[ $rawhex_len -gt 0 ]]  && freshness="$colors_reset"
+        [[ $rawhex_len -gt 0 ]]  && freshness="$colors_reset="
         unset branch status modified added clean init added mixed untracked op detached
 
 	# info not in porcelain status
@@ -463,16 +463,26 @@ parse_git_status() {
                                         # git status --porcelain
                                         # A  "with space"                 <------------- WITH QOUTES
 
+        # eval " $(
+        #         git status --porcelain 2>/dev/null |
+        #                 sed -n '
+        #                         s,^[MARC]. \([^\"][^/]*/\?\).*,         added=added;           [[ \" ${added_files[@]} \"      =~ \" \1 \" ]]   || added_files[${#added_files[@]}]=\"\1\",p
+        #                         s,^[MARC]. \"\([^/]\+/\?\).*\"$,        added=added;           [[ \" ${added_files[@]} \"      =~ \" \1 \" ]]   || added_files[${#added_files[@]}]=\"\1\",p
+        #                         s,^.[MAU] \([^\"][^/]*/\?\).*,          modified=modified;     [[ \" ${modified_files[@]} \"   =~ \" \1 \" ]]   || modified_files[${#modified_files[@]}]=\"\1\",p
+        #                         s,^.[MAU] \"\([^/]\+/\?\).*\"$,         modified=modified;     [[ \" ${modified_files[@]} \"   =~ \" \1 \" ]]   || modified_files[${#modified_files[@]}]=\"\1\",p
+        #                         s,^?? \([^\"][^/]*/\?\).*,              untracked=untracked;   [[ \" ${untracked_files[@]} \"  =~ \" \1 \" ]]   || untracked_files[${#untracked_files[@]}]=\"\1\",p
+        #                         s,^?? \"\([^/]\+/\?\).*\"$,             untracked=untracked;   [[ \" ${untracked_files[@]} \"  =~ \" \1 \" ]]   || untracked_files[${#untracked_files[@]}]=\"\1\",p
+        #                 '   # |tee /dev/tty
+        # )"
+
         eval " $(
                 git status --porcelain 2>/dev/null |
-                        sed -n '
-                                s,^[MARC]. \([^\"][^/]*/\?\).*,         added=added;           [[ \" ${added_files[@]} \"      =~ \" \1 \" ]]   || added_files[${#added_files[@]}]=\"\1\",p
-                                s,^[MARC]. \"\([^/]\+/\?\).*\"$,        added=added;           [[ \" ${added_files[@]} \"      =~ \" \1 \" ]]   || added_files[${#added_files[@]}]=\"\1\",p
-                                s,^.[MAU] \([^\"][^/]*/\?\).*,          modified=modified;     [[ \" ${modified_files[@]} \"   =~ \" \1 \" ]]   || modified_files[${#modified_files[@]}]=\"\1\",p
-                                s,^.[MAU] \"\([^/]\+/\?\).*\"$,         modified=modified;     [[ \" ${modified_files[@]} \"   =~ \" \1 \" ]]   || modified_files[${#modified_files[@]}]=\"\1\",p
-                                s,^?? \([^\"][^/]*/\?\).*,              untracked=untracked;   [[ \" ${untracked_files[@]} \"  =~ \" \1 \" ]]   || untracked_files[${#untracked_files[@]}]=\"\1\",p
-                                s,^?? \"\([^/]\+/\?\).*\"$,             untracked=untracked;   [[ \" ${untracked_files[@]} \"  =~ \" \1 \" ]]   || untracked_files[${#untracked_files[@]}]=\"\1\",p
-                        '   # |tee /dev/tty
+                    sed -n '
+                        s/^[MARC]. \(.*\)/      added=added;            [[ \" ${added_files[*]} \" =~  \1  ]]    || added_files[${#added_files[@]}]=\1/p
+                        s/^.[MAU] \(.*\)/   modified=modified;      [[ \" ${modified_files[*]} \" =~  \1 ]]  || modified_files[${#modified_files[@]}]=\1/p
+                        s/^?? \([a-zA-Z_.=:]*\)$/           untracked=untracked;    [[ \" ${untracked_files[*]} \" =~ \" \1 \" ]]  || untracked_files[${#untracked_files[@]}]=\"\1\"/p
+                        s/^?? \(.*\)$/           untracked=untracked;    [[ \" ${untracked_files[*]} \" =~ \" \1 \" ]]  || untracked_files[${#untracked_files[@]}]=\"\1\"/p
+                    '
         )"
 
         if  ! grep -q "^ref:" "$git_dir/HEAD"  2>/dev/null;   then
@@ -706,7 +716,7 @@ prompt_command_function() {
         cwd=${PWD/$HOME/\~}                     # substitute  "~"
         set_shell_label "${cwd##[/~]*/}/"       # default label - path last dir
 
-	parse_virtualenv_status
+        parse_virtualenv_status
         parse_vcs_status
 
         # autojump
