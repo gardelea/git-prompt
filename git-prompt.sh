@@ -381,9 +381,9 @@ parse_git_status() {
                         s/^# On branch /branch=/p
                         s/^nothing to commi.*/clean=clean/p
                         s/^# Initial commi.*/init=init/p
-                        s/^# Your branch is ahead of \(.\).\+\1 by [[:digit:]]\+ commit.*/freshness=${WHITE}↑/p
-                        s/^# Your branch is behind \(.\).\+\1 by [[:digit:]]\+ commit.*/freshness=${YELLOW}↓/p
-                        s/^# Your branch and \(.\).\+\1 have diverged.*/freshness=${YELLOW}↕/p
+                        s/^# Your branch is ahead of \(.\).*\1 by [[:digit:]]* commit.*/freshness=${WHITE}↑/p
+                        s/^# Your branch is behind \(.\).*\1 by [[:digit:]]* commit.*/freshness=${YELLOW}↓/p
+                        s/^# Your branch and \(.\).*\1 have diverged.*/freshness=${YELLOW}↕/p
                     '
         )"
 
@@ -593,10 +593,6 @@ parse_vcs_status() {
 parse_virtualenv_status() {
         unset virtualenv
 
-        # I just want to know what the fuck this is all about
-        if [[ $virtualenv_module == "on" ]] ; then
-                echo "virtualenv_module = ${virtualenv_module}"
-        fi
         [[ $virtualenv_module = "on" ]] || return 1
 
         if [[ -n "$VIRTUAL_ENV" ]] ; then
