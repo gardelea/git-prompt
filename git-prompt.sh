@@ -381,8 +381,8 @@ parse_git_status() {
                         s/^# On branch /branch=/p
                         s/^nothing to commi.*/clean=clean/p
                         s/^# Initial commi.*/init=init/p
-                        s/^# Your branch is ahead of \(.\).*\1 by [[:digit:]]* commit.*/freshness=${WHITE}⬆/p
-                        s/^# Your branch is behind \(.\).*\1 by [[:digit:]]* commit.*/freshness=${YELLOW}⬇/p
+                        s/^# Your branch is ahead of \(.\).*\1 by [[:digit:]]* commit.*/freshness="${WHITE}⬆ "/p
+                        s/^# Your branch is behind \(.\).*\1 by [[:digit:]]* commit.*/freshness="${YELLOW}⬇ "/p
                         s/^# Your branch and \(.\).*\1 have diverged.*/freshness=${YELLOW}⟗/p
                     '
         )"
@@ -398,28 +398,29 @@ parse_git_status() {
         # git status --porcelain
         # A  "with space"                 <------------- WITH QOUTES
 
-        # The new "better" way to do the above, however it does not seem to work on Mac OS X 10.6.8 or 10.8.2-3
-        # eval " $(
-        #         git status --porcelain 2>/dev/null |
-        #                 sed -n '
-        #                         s,^[MARC]. \([^\"][^/]*/\?\).*,         added=added;           [[ \" ${added_files[@]} \"      =~ \" \1 \" ]]   || added_files[${#added_files[@]}]=\"\1\",p
-        #                         s,^[MARC]. \"\([^/]\+/\?\).*\"$,        added=added;           [[ \" ${added_files[@]} \"      =~ \" \1 \" ]]   || added_files[${#added_files[@]}]=\"\1\",p
-        #                         s,^.[MAU] \([^\"][^/]*/\?\).*,          modified=modified;     [[ \" ${modified_files[@]} \"   =~ \" \1 \" ]]   || modified_files[${#modified_files[@]}]=\"\1\",p
-        #                         s,^.[MAU] \"\([^/]\+/\?\).*\"$,         modified=modified;     [[ \" ${modified_files[@]} \"   =~ \" \1 \" ]]   || modified_files[${#modified_files[@]}]=\"\1\",p
-        #                         s,^?? \([^\"][^/]*/\?\).*,              untracked=untracked;   [[ \" ${untracked_files[@]} \"  =~ \" \1 \" ]]   || untracked_files[${#untracked_files[@]}]=\"\1\",p
-        #                         s,^?? \"\([^/]\+/\?\).*\"$,             untracked=untracked;   [[ \" ${untracked_files[@]} \"  =~ \" \1 \" ]]   || untracked_files[${#untracked_files[@]}]=\"\1\",p
-        #                 '   # |tee /dev/tty
-        # )"
-
+        # The new "better" way to do the above, however it does not seem to work on Mac OS X 10.6.8 or 10.8.2-3.
+        # NOTE : this requires gnu-sed on Mac OS X.  `brew install gnu-sed`
         eval " $(
                 git status --porcelain 2>/dev/null |
-                    sed -n '
-                        s/^[MARC]. \(.*\)/              added=added;            [[ \" ${added_files[*]} \" =~  \1  ]]          || added_files[${#added_files[@]}]=\1/p
-                        s/^.[MAU] \(.*\)/               modified=modified;      [[ \" ${modified_files[*]} \" =~  \1 ]]        || modified_files[${#modified_files[@]}]=\1/p
-                        s/^?? \([a-zA-Z_.=:]*\)$/       untracked=untracked;    [[ \" ${untracked_files[*]} \" =~ \" \1 \" ]]  || untracked_files[${#untracked_files[@]}]=\"\1\"/p
-                        s/^?? \(.*\)$/                  untracked=untracked;    [[ \" ${untracked_files[*]} \" =~ \" \1 \" ]]  || untracked_files[${#untracked_files[@]}]=\"\1\"/p
-                    '
+                        gsed -n '
+                                s,^[MARC]. \([^\"][^/]*/\?\).*,         added=added;           [[ \" ${added_files[@]} \"      =~ \" \1 \" ]]   || added_files[${#added_files[@]}]=\"\1\",p
+                                s,^[MARC]. \"\([^/]\+/\?\).*\"$,        added=added;           [[ \" ${added_files[@]} \"      =~ \" \1 \" ]]   || added_files[${#added_files[@]}]=\"\1\",p
+                                s,^.[MAU] \([^\"][^/]*/\?\).*,          modified=modified;     [[ \" ${modified_files[@]} \"   =~ \" \1 \" ]]   || modified_files[${#modified_files[@]}]=\"\1\",p
+                                s,^.[MAU] \"\([^/]\+/\?\).*\"$,         modified=modified;     [[ \" ${modified_files[@]} \"   =~ \" \1 \" ]]   || modified_files[${#modified_files[@]}]=\"\1\",p
+                                s,^?? \([^\"][^/]*/\?\).*,              untracked=untracked;   [[ \" ${untracked_files[@]} \"  =~ \" \1 \" ]]   || untracked_files[${#untracked_files[@]}]=\"\1\",p
+                                s,^?? \"\([^/]\+/\?\).*\"$,             untracked=untracked;   [[ \" ${untracked_files[@]} \"  =~ \" \1 \" ]]   || untracked_files[${#untracked_files[@]}]=\"\1\",p
+                        '   # |tee /dev/tty
         )"
+
+        # eval " $(
+        #         git status --porcelain 2>/dev/null |
+        #             sed -n '
+        #                 s/^[MARC]. \(.*\)/              added=added;            [[ \" ${added_files[*]} \" =~  \1  ]]          || added_files[${#added_files[@]}]=\1/p
+        #                 s/^.[MAU] \(.*\)/               modified=modified;      [[ \" ${modified_files[*]} \" =~  \1 ]]        || modified_files[${#modified_files[@]}]=\1/p
+        #                 s/^?? \([a-zA-Z_.=:]*\)$/       untracked=untracked;    [[ \" ${untracked_files[*]} \" =~ \" \1 \" ]]  || untracked_files[${#untracked_files[@]}]=\"\1\"/p
+        #                 s/^?? \(.*\)$/                  untracked=untracked;    [[ \" ${untracked_files[*]} \" =~ \" \1 \" ]]  || untracked_files[${#untracked_files[@]}]=\"\1\"/p
+        #             '
+        # )"
 
         if  ! grep -q "^ref:" "$git_dir/HEAD"  2>/dev/null;   then
                 detached=detached
